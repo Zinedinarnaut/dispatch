@@ -186,7 +186,7 @@ async def get_cached_products(
                     "description": record.description,
                     "brand": record.brand,
                     "categories": record.categories,
-                    "metadata": record.metadata,
+                    "metadata": record.attributes,
                     "last_seen": record.last_seen.isoformat(),
                 }
                 for record in records

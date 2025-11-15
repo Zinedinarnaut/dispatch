@@ -25,7 +25,7 @@ class ProductRecord(Base):
     description = Column(Text, nullable=True)
     brand = Column(String(255), nullable=True)
     categories = Column(JSON, nullable=False, default=list)
-    metadata = Column(JSON, nullable=False, default=dict)
+    attributes = Column(JSON, nullable=False, default=dict)
     last_seen = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def update_from_dict(self, data: dict[str, Any]) -> None:

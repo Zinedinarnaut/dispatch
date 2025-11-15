@@ -24,7 +24,7 @@ def _product_to_dict(product: Product) -> dict:
         "description": product.description,
         "brand": product.brand,
         "categories": product.categories,
-        "metadata": product.metadata,
+        "attributes": product.metadata,
         "last_seen": product.last_seen,
     }
 
