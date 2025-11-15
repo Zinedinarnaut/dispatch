@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from functools import lru_cache
-import json
 import logging
 from pathlib import Path
 import secrets
@@ -10,19 +9,16 @@ from typing import List
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings.sources import (
+    DotEnvSettingsSource,
+    EnvSettingsSource,
+    InitSettingsSource,
+    PydanticBaseSettingsSource,
+    SecretsSettingsSource,
+)
 
 
 logger = logging.getLogger("dispatch.config")
-
-
-def _tolerant_json_loads(value: str):
-    """Parse JSON for complex env fields but allow blank strings."""
-
-    if value == "":
-        return value
-    return json.loads(value)
-
-
 class Settings(BaseSettings):
     """Runtime configuration loaded from environment variables."""
 
@@ -30,7 +26,6 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
-        json_loads=_tolerant_json_loads,
     )
 
     app_name: str = Field(default="Dispatch", description="Human readable application name.")
@@ -84,6 +79,36 @@ class Settings(BaseSettings):
         if self.master_key and self.master_key not in self.api_keys:
             object.__setattr__(self, "api_keys", [*self.api_keys, self.master_key])
         return self
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: InitSettingsSource,
+        env_settings: EnvSettingsSource,
+        dotenv_settings: DotEnvSettingsSource,
+        file_secret_settings: SecretsSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Inject tolerant env sources that skip JSON decoding for blank values."""
+
+        class _BlankFriendlyMixin:
+            def decode_complex_value(self, field_name, field, value):  # type: ignore[override]
+                if isinstance(value, str) and not value.strip():
+                    return value
+                return super().decode_complex_value(field_name, field, value)  # type: ignore[misc]
+
+        class _EnvSource(_BlankFriendlyMixin, EnvSettingsSource):
+            pass
+
+        class _DotEnvSource(_BlankFriendlyMixin, DotEnvSettingsSource):
+            pass
+
+        return (
+            init_settings,
+            _EnvSource(settings_cls),
+            _DotEnvSource(settings_cls),
+            file_secret_settings,
+        )
 
 
 def _persist_master_key(path: Path, key: str) -> None:
