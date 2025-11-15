@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2024-06-08
+### Added
+- Automated background scraping loop with structured logging and telemetry events.
+- SQLite-backed persistence layer with SQLAlchemy models and repository helpers.
+- Cached product endpoint and configuration options for scrape cadence and logging.
+- Automatic master key generation with `.env` persistence and bootstrap configuration file.
+
+### Changed
+- Documented new environment variables and persistence workflow in the README.
+
 ## [0.1.0] - 2024-06-07
 ### Added
 - Initial Dispatch service with FastAPI application skeleton.

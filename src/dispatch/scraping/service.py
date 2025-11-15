@@ -1,12 +1,15 @@
 """Scraping service orchestrating provider-specific scrapers."""
 from __future__ import annotations
 
+import logging
 from typing import Dict, Iterable, List, Optional
 
 from .base import BaseScraper, Product, ScraperError
 from .sites.complexshop import ComplexShopScraper
 from .sites.goat import GoatScraper
 from .sites.universalstore import UniversalStoreScraper
+
+logger = logging.getLogger("dispatch.scraping")
 
 
 class ScraperRegistry:
@@ -27,8 +30,11 @@ class ScraperRegistry:
 
 
 async def collect_from_scraper(scraper: BaseScraper, *, query: Optional[str], limit: Optional[int]) -> List[Product]:
+    logger.debug("Collecting products from %s", scraper.provider)
     products = await scraper.fetch_products(query=query, limit=limit)
-    return list(products)
+    items = list(products)
+    logger.debug("Collected %s products from %s", len(items), scraper.provider)
+    return items
 
 
 def create_registry(*, timeout: float, user_agent: str) -> ScraperRegistry:
