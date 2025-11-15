@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import json
 import logging
 from pathlib import Path
 import secrets
@@ -14,10 +15,23 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 logger = logging.getLogger("dispatch.config")
 
 
+def _tolerant_json_loads(value: str):
+    """Parse JSON for complex env fields but allow blank strings."""
+
+    if value == "":
+        return value
+    return json.loads(value)
+
+
 class Settings(BaseSettings):
     """Runtime configuration loaded from environment variables."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        json_loads=_tolerant_json_loads,
+    )
 
     app_name: str = Field(default="Dispatch", description="Human readable application name.")
     environment: str = Field(default="development", description="Environment name for telemetry tagging.")
