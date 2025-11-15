@@ -4,7 +4,8 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import List
 
-from pydantic import AnyUrl, BaseSettings, Field, validator
+from pydantic import AnyUrl, Field, field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -43,7 +44,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
 
-    @validator("api_keys", pre=True)
+    @field_validator("api_keys", mode="before")
     def _split_api_keys(cls, value: str | list[str]) -> list[str]:
         if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
